@@ -86,7 +86,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 user.Id = Guid.NewGuid().ToString();
             }
 
-            ResourceResponse<Document> result = await documentClient.CreateDocumentAsync(collectionUri, user);
+            ResourceResponse<Document> result = await documentClient.CreateDocumentAsync(collectionUri, user, cancellationToken: cancellationToken);
 
             return result.StatusCode == HttpStatusCode.Created
                 ? IdentityResult.Success
@@ -105,7 +105,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
 
             try
             {
-                await documentClient.DeleteDocumentAsync(GenerateDocumentUri(user.Id));
+                await documentClient.DeleteDocumentAsync(GenerateDocumentUri(user.Id), cancellationToken: cancellationToken);
             }
             catch (DocumentClientException dce)
             {
@@ -130,7 +130,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(userId));
             }
 
-            TUser foundUser = await documentClient.ReadDocumentAsync<TUser>(GenerateDocumentUri(userId));
+            TUser foundUser = await documentClient.ReadDocumentAsync<TUser>(GenerateDocumentUri(userId), cancellationToken: cancellationToken);
 
             return foundUser;
         }
@@ -244,7 +244,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
 
             try
             {
-                await documentClient.ReplaceDocumentAsync(GenerateDocumentUri(user.Id), document: user);
+                await documentClient.ReplaceDocumentAsync(GenerateDocumentUri(user.Id), document: user, cancellationToken: cancellationToken);
             }
             catch (DocumentClientException dce)
             {
@@ -339,7 +339,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
                 throw new ArgumentNullException(nameof(claims));
             }
 
-            IEnumerable<Claim> foundClaims = user.Claims.Where(c => claims.Any(rc => rc.Type == c.Type && rc.Value ==c.Value)).ToList();
+            IEnumerable<Claim> foundClaims = user.Claims.Where(c => claims.Any(rc => rc.Type == c.Type && rc.Value == c.Value)).ToList();
 
             foreach (Claim claimToRemove in foundClaims)
             {
@@ -920,6 +920,7 @@ namespace AspNetCore.Identity.DocumentDb.Stores
         }
 
 #if NETSTANDARD2
+
         public Task SetAuthenticatorKeyAsync(TUser user, string key, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -995,9 +996,10 @@ namespace AspNetCore.Identity.DocumentDb.Stores
             var recoveryCodesCount = user.RecoveryCodes?.Count();
             return Task.FromResult(recoveryCodesCount ?? 0);
         }
+
 #endif
 
-#region IDisposable Support
+        #region IDisposable Support
 
         public void Dispose()
         {
@@ -1005,6 +1007,6 @@ namespace AspNetCore.Identity.DocumentDb.Stores
             disposed = false;
         }
 
-#endregion
+        #endregion IDisposable Support
     }
 }
